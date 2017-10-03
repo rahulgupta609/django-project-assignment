@@ -1,15 +1,21 @@
-# views.py
-
-from django.shortcuts import render, HttpResponse
-from django.views import View
+from django.shortcuts import render
 from .models import UserProfile
 import requests
 
 
 def profile(request):
+    """
+
+    Args:
+        request: user
+
+    Returns: A template that search for a user in github and save user to our database
+
+    """
     parsedData = []
     if request.method == 'POST':
         username = request.POST.get('user')
+        # GitHub api call to get the information of a given username
         req = requests.get('https://api.github.com/users/' + username)
         jsonList = []
         jsonList.append(req.json())
@@ -25,6 +31,7 @@ def profile(request):
             obj = UserProfile.objects.get(username=userData['username'])
         except UserProfile.DoesNotExist:
             obj = None
+        # Create a user if not exists in the database or update the existing user
         if obj is None:
             UserProfile.objects.create(username=userData['username'],
                                        image_url=userData['image_url'],
