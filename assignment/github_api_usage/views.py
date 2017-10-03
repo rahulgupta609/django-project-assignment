@@ -1,6 +1,8 @@
 # views.py
 
 from django.shortcuts import render, HttpResponse
+from django.views import View
+from .models import UserProfile
 import requests
 
 
@@ -14,12 +16,27 @@ def profile(request):
         userData = {}
         for data in jsonList:
             userData['name'] = data['name']
-            userData['blog'] = data['blog']
+            userData['username'] = data['login']
+            userData['image_url'] = data['avatar_url']
+            userData['company'] = data['company']
             userData['email'] = data['email']
-            userData['public_gists'] = data['public_gists']
-            userData['public_repos'] = data['public_repos']
-            userData['avatar_url'] = data['avatar_url']
-            userData['followers'] = data['followers']
-            userData['following'] = data['following']
         parsedData.append(userData)
+        try:
+            obj = UserProfile.objects.get(username=userData['username'])
+        except UserProfile.DoesNotExist:
+            obj = None
+        if obj is None:
+            UserProfile.objects.create(username=userData['username'],
+                                       image_url=userData['image_url'],
+                                       name=userData['name'],
+                                       company=userData['company'],
+                                       email=userData['email'])
+        else:
+            obj.username = userData['username']
+            obj.image_url = userData['image_url']
+            obj.name = userData['name']
+            obj.company = userData['company']
+            obj.email = userData['email']
+            obj.save()
     return render(request, 'userProfile/profile.html', {'data': parsedData})
+
